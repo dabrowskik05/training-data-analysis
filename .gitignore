@@ -173,6 +173,4 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 
-# Custom ignored folders
-pdu-2025L-dane-csv/
-pdu-2025L-dane-json/
+
