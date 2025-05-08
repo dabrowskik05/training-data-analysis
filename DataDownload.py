@@ -2,6 +2,7 @@ import pandas as pd
 import json
 import glob
 import os
+import pandas as pd
 
 folder_patch = "pdu-2025L-dane-json/"
 
@@ -18,6 +19,10 @@ for file in json_files:
             print(f"Blad w dekodowaniu w pliku: {file}")
 
 df = pd.DataFrame(data)
-
+df = df.dropna(axis=1, how="all")
+columns_to_drop = [
+    col for col in df.columns if df[col].apply(lambda x: x == df[col].iloc[0]).all()
+]
+df.drop(columns=columns_to_drop, inplace=True)
 print(df.head())
 df.to_csv("zebrane_dane.csv", index=False)
