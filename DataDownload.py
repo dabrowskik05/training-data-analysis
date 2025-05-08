@@ -5,7 +5,7 @@ import os
 
 folder_patch = "pdu-2025L-dane-json/"
 
-json_files = glob.glob(os.path/join(folder_patch, "*.json"))
+json_files = glob.glob(os.path.join(folder_patch, "*.json"))
 
 data = []
 
@@ -20,3 +20,4 @@ for file in json_files:
 df = pd.DataFrame(data)
 
 print(df.head())
+df.to_csv("zebrane_dane.csv", index=False)
