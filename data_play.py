@@ -7,19 +7,13 @@ import os, os.path
 import glob
 import json
 # %%
-path = "pdu-2025L-dane-json/"
+path = "zebrane_dane.csv"
 
-json_files = glob.glob(os.path.join(path, "*.json"))
-
-data = []
-
-for file in json_files:
-    with open(file, "r", encoding='utf-8') as f:
-        try:
-            record = json.load(f)
-            data.append(record)
-        except json.JSONDecodeError:
-            print(f"Blad w dekodowaniu w pliku: {file}")
-
-df = pd.DataFrame(data)
+df = pd.read_csv(path)
+df.columns
+# %%
+df["start_time"] = df["start_time"].str.slice(0, 19)
+df["timestamp"] = df["timestamp"].str.slice(0, 19)
+# %%
+df
 # %%
