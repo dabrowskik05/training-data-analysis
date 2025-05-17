@@ -4,7 +4,7 @@ import glob
 import os
 import pandas as pd
 
-folder_patch = r"C:\Users\Medion\Desktop\Dane\"
+folder_patch = "pdu-2025L-dane-json/"
 
 json_files = glob.glob(os.path.join(folder_patch, "*.json"))
 
