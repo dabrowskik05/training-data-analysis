@@ -1,9 +1,11 @@
+# %%
 import pandas as pd
 import json
 import glob
 import os
-import pandas as pd
+import numpy as np
 
+# %%
 folder_patch = "pdu-2025L-dane-json/"
 
 json_files = glob.glob(os.path.join(folder_patch, "*.json"))
@@ -24,5 +26,9 @@ columns_to_drop = [
     col for col in df.columns if df[col].apply(lambda x: x == df[col].iloc[0]).all()
 ]
 df.drop(columns=columns_to_drop, inplace=True)
-print(df.head())
+df['timestamp'] = pd.to_datetime(df['timestamp'])
+
+df = df.sort_values('timestamp').reset_index(drop=True)
 df.to_csv("zebrane_dane.csv", index=False)
+# %%
+df.loc[:, 'start_position_lat@deg'] = np.round(df.loc[:, 'start_position_lat@deg'])

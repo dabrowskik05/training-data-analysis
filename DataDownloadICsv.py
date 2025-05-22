@@ -1,0 +1,65 @@
+# %%
+import numpy as np
+import matplotlib as plt
+import pandas as pd
+import glob
+import os
+
+folder_patch = "pdu-2025L-dane-csv/"
+
+csv_files = glob.glob(os.path.join(folder_patch, "*.csv"))
+
+data = []
+
+for file in csv_files:
+    df = pd.read_csv(file, )
+    data.append(df)
+
+df_csv = pd.concat(data, ignore_index=True)
+
+unit_labels = {
+    'timestamp': 'Full_Date',
+    'position_lat@deg': 'Latitude (°)',
+    'position_long@deg': 'Longitude (°)',
+    'distance@km': 'Distance (km)',
+    'enhanced_speed@km/h': 'Speed (km/h)',
+    'enhanced_altitude@m': 'Altitude (m)',
+    'heart_rate@bpm': 'Heart Rate (bpm)',
+    'cadence@rpm': 'Cadence (rpm)',
+    'temperature@C': 'Temperature (°C)',
+    'fractional_cadence@rpm': 'Fractional Cadence (rpm)',
+    'vertical_oscillation@mm': 'Vertical Oscillation (mm)',
+    'stance_time_percent@percent': 'Stance Time (%)',
+    'stance_time@ms': 'Stance Time (ms)',
+    'vertical_ratio@percent': 'Vertical Ratio (%)',
+    'stance_time_balance@percent': 'Stance Time Balance (%)',
+    'step_length@mm': 'Step Length (mm)',
+    'activity_type': 'Activity Type',
+    'altitude@m': 'Raw Altitude (m)',
+    'speed@km/h': 'Raw Speed (km/h)',
+}
+
+work_names = {
+    'timestamp': 'Full_Date',
+    'position_lat@deg': 'Latitude',
+    'position_long@deg': 'Longitude',
+    'distance@km': 'Distance',
+    'enhanced_speed@km/h': 'Speed',
+    'enhanced_altitude@m': 'Altitude',
+    'heart_rate@bpm': 'Heart_Rate',
+    'cadence@rpm': 'Cadence',
+    'temperature@C': 'Temperature',
+    'fractional_cadence@rpm': 'Fractional_Cadence',
+    'vertical_oscillation@mm': 'Vertical_Oscillation',
+    'stance_time_percent@percent': 'Stance_Time',
+    'stance_time@ms': 'Stance_Time',
+    'vertical_ratio@percent': 'Vertical_Ratio',
+    'stance_time_balance@percent': 'Stance_Time_Balance',
+    'step_length@mm': 'Step_Length',
+    'activity_type': 'Activity_Type',
+    'altitude@m': 'Raw_Altitude',
+    'speed@km/h': 'Raw_Speed',
+}
+df_csv.rename(columns=work_names, inplace=True)
+
+# %%
