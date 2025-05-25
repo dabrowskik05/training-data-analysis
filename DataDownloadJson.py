@@ -27,8 +27,9 @@ columns_to_drop = [
 ]
 df.drop(columns=columns_to_drop, inplace=True)
 df['timestamp'] = pd.to_datetime(df['timestamp'])
+df.loc[:, 'session_id'] = np.arange(len(df.iloc[:, 0]))
 
 df = df.sort_values('timestamp').reset_index(drop=True)
-df.to_csv("zebrane_dane.csv", index=False)
+df.to_csv("zebrane_dane_json.csv", index=False)
+
 # %%
-df.loc[:, 'start_position_lat@deg'] = np.round(df.loc[:, 'start_position_lat@deg'])

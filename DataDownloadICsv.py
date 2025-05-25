@@ -11,11 +11,13 @@ csv_files = glob.glob(os.path.join(folder_patch, "*.csv"))
 
 data = []
 
-for file in csv_files:
-    df = pd.read_csv(file, )
+for i, file in enumerate(csv_files):
+    df = pd.read_csv(file)
+    df.insert(1, 'session_id', 1)
+    df.loc[:, 'session_id'] = i
     data.append(df)
 
-df_csv = pd.concat(data, ignore_index=True)
+df_csv = pd.concat(data)
 
 unit_labels = {
     'timestamp': 'Full_Date',
@@ -37,6 +39,7 @@ unit_labels = {
     'activity_type': 'Activity Type',
     'altitude@m': 'Raw Altitude (m)',
     'speed@km/h': 'Raw Speed (km/h)',
+    'session_id' : 'session_id'
 }
 
 work_names = {
@@ -59,6 +62,7 @@ work_names = {
     'activity_type': 'Activity_Type',
     'altitude@m': 'Raw_Altitude',
     'speed@km/h': 'Raw_Speed',
+    'session_id' : 'session_id'
 }
 df_csv.rename(columns=work_names, inplace=True)
 
