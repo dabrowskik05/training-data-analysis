@@ -12,12 +12,12 @@ csv_files = glob.glob(os.path.join(folder_patch, "*.csv"))
 data = []
 
 for i, file in enumerate(csv_files):
-    df = pd.read_csv(file)
-    df.insert(1, 'session_id', 1)
-    df.loc[:, 'session_id'] = i
-    data.append(df)
+    df1 = pd.read_csv(file)
+    df1.insert(1, 'session_id', 1)
+    df1.loc[:, 'session_id'] = i
+    data.append(df1)
 
-df_csv = pd.concat(data)
+df = pd.concat(data)
 
 unit_labels = {
     'timestamp': 'Full_Date',
@@ -64,6 +64,6 @@ work_names = {
     'speed@km/h': 'Raw_Speed',
     'session_id' : 'session_id'
 }
-df_csv.rename(columns=work_names, inplace=True)
+df.rename(columns=work_names, inplace=True)
 
 # %%

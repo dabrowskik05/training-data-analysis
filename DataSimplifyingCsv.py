@@ -5,7 +5,7 @@ import folium
 from folium import plugins
 import DataDownloadICsv as Dane
 
-df = Dane.df_csv
+df = Dane.df
 unit_labels = Dane.unit_labels
 
 # %%
