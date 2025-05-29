@@ -54,7 +54,7 @@ work_names = {
     'temperature@C': 'Temperature',
     'fractional_cadence@rpm': 'Fractional_Cadence',
     'vertical_oscillation@mm': 'Vertical_Oscillation',
-    'stance_time_percent@percent': 'Stance_Time',
+    'stance_time_percent@percent': 'Stance_Time_Percent',
     'stance_time@ms': 'Stance_Time',
     'vertical_ratio@percent': 'Vertical_Ratio',
     'stance_time_balance@percent': 'Stance_Time_Balance',
@@ -65,5 +65,7 @@ work_names = {
     'session_id' : 'session_id'
 }
 df.rename(columns=work_names, inplace=True)
+
+df.loc[df.loc[:, 'Activity_Type'].isna(), 'Activity_Type'] = 'cycling'
 
 # %%
