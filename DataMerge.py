@@ -9,14 +9,13 @@ df_json = DaneJson.df
 
 # %%
 merged_df = pd.merge(df_json, df_csv, on='session_id', how='left')
-    
-# %%
 
 # Most important data
 summarised_df = merged_df.loc[:, merged_df.columns.tolist()[0:10] + 
     ['total_strokes', 'calories', 'total_ascent', 'total_descent', 
      'training_effect', 'anaerobic_effect', 'total_strides' ]
     + df_csv.columns.tolist()[2:len(df_csv.columns)] + ['session_id'] ]
+
 # %%
 rename_dict = {
     "start_date": "Start_Date",
