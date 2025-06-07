@@ -6,19 +6,17 @@ import DataSimplifyingJson as DaneJson
 # %%
 df_csv = DaneCsv.df
 df_json = DaneJson.df
+
 # %%
-# Literally everything (with duplicates)
 merged_df = pd.merge(df_json, df_csv, on='session_id', how='left')
     
 # %%
 
-merged_df.to_csv('zmergowane_dane.csv', index=False)
-# %%
-
 # Most important data
 summarised_df = merged_df.loc[:, merged_df.columns.tolist()[0:10] + 
-                          ['total_strokes', 'calories', 'total_ascent', 'total_descent', 'training_effect', 'anaerobic_effect', 'total_strides' ]
-                           + df_csv.columns.tolist()[2:len(df_csv.columns)] + ['session_id'] ]
+    ['total_strokes', 'calories', 'total_ascent', 'total_descent', 
+     'training_effect', 'anaerobic_effect', 'total_strides' ]
+    + df_csv.columns.tolist()[2:len(df_csv.columns)] + ['session_id'] ]
 # %%
 rename_dict = {
     "start_date": "Start_Date",
@@ -43,3 +41,4 @@ rename_dict = {
 summarised_df = summarised_df.rename(columns=rename_dict)
 
 # %%
+merged_df.to_csv('zmergowane_dane.csv', index=False)
