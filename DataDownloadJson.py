@@ -14,13 +14,13 @@ data = []
 
 for file in json_files:
     with open(file, "r", encoding='utf-8') as f:
-        try:
-            record = json.load(f)
-            data.append(record)
-        except json.JSONDecodeError:
-            print(f"Blad w dekodowaniu w pliku: {file}")
+        record = json.load(f)
+        data.append(record)
+
 
 df = pd.DataFrame(data)
+
+# %%
 df = df.dropna(axis=1, how="all")
 columns_to_drop = [
     col for col in df.columns if df[col].apply(lambda x: x == df[col].iloc[0]).all()

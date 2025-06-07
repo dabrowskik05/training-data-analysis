@@ -1,6 +1,5 @@
 # %%
 import pandas as pd
-import numpy as np
 import DataSimplifyingCsv as DaneCsv
 import DataSimplifyingJson as DaneJson
 
