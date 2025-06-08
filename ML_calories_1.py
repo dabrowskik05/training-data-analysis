@@ -25,6 +25,8 @@ print(df.describe())
 print(len(df.columns))
 df.isna().sum()
 # %%
+df.loc[:,"calories[kcal]"].sum()
+# %%
 df.start_datetime = pd.to_datetime(df.loc[:,"start_datetime"])
 df.end_datetime = pd.to_datetime(df.loc[:,"end_datetime"])
 df.loc[:,"duration"] = (df.end_datetime - df.start_datetime).dt.total_seconds()
@@ -59,7 +61,7 @@ df = df.drop(['vertical_oscillation[mm]','stance_time_pct[%]','stance_time[ms]',
 # %% 
 df.loc[:,"elapsed_time[s]"].isna().sum() # elapsed_time jest bez wartości NA
 sporty = df.groupby(["sport","sub_sport"])
-sporty["elapsed_time[s]"].count() 
+sporty["elapsed_time[s]"].count()
 # sport-odnotowania: cycling-816, hiking-81, running-289, gen_running-289, trail_running-458, walking-91
 sporty[["avg_run_cadence[strides/min]","avg_cadence[rpm]"]].apply(lambda x: x.isna().sum())
 # kolumna "avg_run_cadence[strides/min]" jest dla running, "avg_cadence[rpm]" dla pozostałych
@@ -79,21 +81,14 @@ df = df.drop(['avg_cadence[rpm]', 'max_cadence[rpm]','avg_run_cadence[strides/mi
 df.loc[:,["avg_cadence[rpm/spm]","avg_cadence_fractional[rpm]"]].describe()
 # general_avg_cadence - wartości całkowite w przedziale [7,103]
 # avg_cadence_fractional - wartości ułamkowe w przedziale [0,1) - część ułamkowa?
-df.loc[:,"real_avg_cadence[rpm/spm]"] = df.loc[:,"avg_cadence[rpm/spm]"] + df.loc[:,"avg_cadence_fractional[rpm]"]
-df.loc[:,"real_max_cadence[rpm/spm]"] = df.loc[:,"max_cadence[rpm/spm]"] + df.loc[:,"max_cadence_fractional[rpm]"]
-df.loc[:,["avg_cadence[rpm/spm]", "real_avg_cadence[rpm/spm]", "calories[kcal]"]].corr()
-# real_avg_cadence ma ledwo większą korelację (<0.001)
-df.loc[:,["max_cadence[rpm/spm]", "real_max_cadence[rpm/spm]", "calories[kcal]"]].corr()
-# general_max_cadence ma delikatnie większą korelację
-df = df.drop(["avg_cadence_fractional[rpm]", "max_cadence_fractional[rpm]", 
-              "real_avg_cadence[rpm/spm]","real_max_cadence[rpm/spm]"], axis=1)
+df.loc[:,"avg_cadence[rpm/spm]"] = df.loc[:,"avg_cadence[rpm/spm]"] + df.loc[:,"avg_cadence_fractional[rpm]"]
+df.loc[:,"max_cadence[rpm/spm]"] = df.loc[:,"max_cadence[rpm/spm]"] + df.loc[:,"max_cadence_fractional[rpm]"]
+df = df.drop(["avg_cadence_fractional[rpm]", "max_cadence_fractional[rpm]"], axis=1)
 # %% analogicznie dla ascent/descent
 df.loc[:, ["total_ascent[m]","fractional_ascent[m]"]].describe()
-df.loc[:,"real_ascent[m]"] =df.loc[:, "total_ascent[m]"] + df.loc[:,"fractional_ascent[m]"].fillna(0)
-df.loc[:,"real_descent[m]"] =df.loc[:, "total_descent[m]"] + df.loc[:,"fractional_descent[m]"].fillna(0)
-df.loc[:,["real_ascent[m]", "total_ascent[m]", "calories[kcal]"]].corr() # bardzo małą różnica
-df.loc[:,["real_descent[m]", "total_descent[m]", "calories[kcal]"]].corr() # bardzo mała różnica
-df = df.drop(["total_ascent[m]","total_descent[m]","fractional_descent[m]","fractional_ascent[m]"], axis=1)
+df.loc[:,"total_ascent[m]"] =df.loc[:, "total_ascent[m]"] + df.loc[:,"fractional_ascent[m]"].fillna(0)
+df.loc[:,"total_descent[m]"] =df.loc[:, "total_descent[m]"] + df.loc[:,"fractional_descent[m]"].fillna(0)
+df = df.drop(["fractional_descent[m]","fractional_ascent[m]"], axis=1)
 # %%
 sporty[["total_strides[strides]","total_strokes[strokes]","total_cycles[cycles]"]].count()
 # strikes jest tylko dla running i walking, strokes dla cycling, cycles dla hiking - połączmy je!
@@ -123,37 +118,48 @@ df = df.drop(["max_speed_enhanced[km/h]","pause_time[s]"], axis=1)
 df.loc[:,"lap_count"].describe() # ilość "serii"
 # %%
 df.isna().sum() # NA tylko dla avg_cadence, max_cadence i movements po 231
-df.isna().sum()/len(df) # to około 13% - można zostawić
-# %% dzielimy na 2 zbiory
-X = df.drop(columns=["calories[kcal]"])
-y = df["calories[kcal]"]
-print("X shape:", X.shape)
-print("y shape:", y.shape)
 # %%
 # dla Random forest nie trzeba wypełniać NANów, ale porównałem i po wypełnieniu jest lepiej
-X.loc[:,"distance_bin"] = pd.qcut(X.loc[:,"distance[km]"], q=5)
-X.loc[:,"avg_cadence[rpm/spm]"] = X.groupby(
-    ["sport","sub_sport", "distance_bin"]
-)["avg_cadence[rpm/spm]"].transform(lambda x: x.fillna(x.median()))
+df.loc[:,"distance_bin"] = pd.qcut(df.loc[:,"distance[km]"], q=5)
+df.loc[:,"avg_cadence[rpm/spm]"] = df.groupby(["sport","sub_sport", "distance_bin"]
+)["avg_cadence[rpm/spm]"].transform(lambda x: x.fillna(x.median())).sort_index()
 
-X.loc[:,"max_cadence[rpm/spm]"] = X.groupby(
-    ["sport","sub_sport", "distance_bin"]
-)["max_cadence[rpm/spm]"].transform(lambda x: x.fillna(x.median()))
+df.loc[:,"max_cadence[rpm/spm]"] = df.groupby(["sport","sub_sport", "distance_bin"]
+)["max_cadence[rpm/spm]"].transform(lambda x: x.fillna(x.median())).sort_index()
 
-X.loc[:,"total_movements"] = X.groupby(
-    ["sport","sub_sport", "distance_bin"]
-)["total_movements"].transform(lambda x: x.fillna(x.median()))
-X = X.drop(columns=["distance_bin"])
+df.loc[:,"total_movements"] = df.groupby(["sport","sub_sport", "distance_bin"]
+)["total_movements"].transform(lambda x: x.fillna(x.median())).sort_index()
+df = df.drop(columns=["distance_bin"])
+# %%
+# usuwamy outlinery
+d1 = df.drop(["sport","sub_sport"], axis=1)
+Q1 = d1.quantile(0.25)
+Q3 = d1.quantile(0.75)
+IQR = Q3 - Q1
+clean = ((d1 >= (Q1 - 1.5 * IQR)) & (d1 <= (Q3 + 1.5 * IQR))).all(axis=1)
+df_clean = df.loc[clean,:].reset_index(drop=True)
+df_clean # 1418 wierszy, czyli tylko o 316 mniej
+df_clean.loc[:,"sport"].unique()
+df_clean.loc[:,"sub_sport"].unique()
+# wszystkie sporty dalej są
+df = df_clean
+# %%
 # one-hot-encoding
-X["is_trail"] = (X["sub_sport"] == "trail")
-X = X.drop(columns=["sub_sport"])
-X = pd.get_dummies(X, columns=["sport"], drop_first=True)
+df = pd.get_dummies(df, columns=["sport","sub_sport"], drop_first=True)
+df
+# %% dzielimy na 2 zbiory
+X = df.drop(columns=["calories[kcal]"])
+Y = df["calories[kcal]"]
+print("X shape:", X.shape)
+print("Y shape:", Y.shape)
 # %% sprawdzamy jak tam nasze dane
 print(X.columns)
-print(y.describe())
+print(Y.describe())
 X.head()
 # %%
 X.to_csv("zebrane_dane_X.csv", index=False)
-y.to_csv("zebrane_dane_y.csv", index=False)
+Y.to_csv("zebrane_dane_Y.csv", index=False)
 #koniec cz.1
+# %%
+df.loc[1234,:]
 # %%
