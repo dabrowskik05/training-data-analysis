@@ -81,14 +81,18 @@ df = df.drop(['avg_cadence[rpm]', 'max_cadence[rpm]','avg_run_cadence[strides/mi
 df.loc[:,["avg_cadence[rpm/spm]","avg_cadence_fractional[rpm]"]].describe()
 # general_avg_cadence - wartości całkowite w przedziale [7,103]
 # avg_cadence_fractional - wartości ułamkowe w przedziale [0,1) - część ułamkowa?
-df.loc[:,"avg_cadence[rpm/spm]"] = df.loc[:,"avg_cadence[rpm/spm]"] + df.loc[:,"avg_cadence_fractional[rpm]"]
-df.loc[:,"max_cadence[rpm/spm]"] = df.loc[:,"max_cadence[rpm/spm]"] + df.loc[:,"max_cadence_fractional[rpm]"]
-df = df.drop(["avg_cadence_fractional[rpm]", "max_cadence_fractional[rpm]"], axis=1)
+df.loc[:,"gen_avg_cadence[rpm/spm]"] = df.loc[:,"avg_cadence[rpm/spm]"] + df.loc[:,"avg_cadence_fractional[rpm]"]
+df.loc[:,"gen_max_cadence[rpm/spm]"] = df.loc[:,"max_cadence[rpm/spm]"] + df.loc[:,"max_cadence_fractional[rpm]"]
+df.loc[:,["gen_max_cadence[rpm/spm]","max_cadence[rpm/spm]", "calories[kcal]"]].corr()
+df.loc[:,["gen_avg_cadence[rpm/spm]","avg_cadence[rpm/spm]", "calories[kcal]"]].corr()
+df = df.drop(["avg_cadence_fractional[rpm]", "max_cadence_fractional[rpm]","gen_avg_cadence[rpm/spm]","gen_max_cadence[rpm/spm]"], axis=1)
 # %% analogicznie dla ascent/descent
 df.loc[:, ["total_ascent[m]","fractional_ascent[m]"]].describe()
-df.loc[:,"total_ascent[m]"] =df.loc[:, "total_ascent[m]"] + df.loc[:,"fractional_ascent[m]"].fillna(0)
-df.loc[:,"total_descent[m]"] =df.loc[:, "total_descent[m]"] + df.loc[:,"fractional_descent[m]"].fillna(0)
-df = df.drop(["fractional_descent[m]","fractional_ascent[m]"], axis=1)
+df.loc[:,"real_ascent[m]"] =df.loc[:, "total_ascent[m]"] + df.loc[:,"fractional_ascent[m]"].fillna(0)
+df.loc[:,"real_descent[m]"] =df.loc[:, "total_descent[m]"] + df.loc[:,"fractional_descent[m]"].fillna(0)
+df.loc[:,["total_ascent[m]","real_ascent[m]", "calories[kcal]"]].corr()
+df.loc[:,["total_descent[m]","real_descent[m]", "calories[kcal]"]].corr()
+df = df.drop(["fractional_descent[m]","fractional_ascent[m]","real_ascent[m]","real_descent[m]"], axis=1)
 # %%
 sporty[["total_strides[strides]","total_strokes[strokes]","total_cycles[cycles]"]].count()
 # strikes jest tylko dla running i walking, strokes dla cycling, cycles dla hiking - połączmy je!
@@ -109,7 +113,7 @@ plt.show()
 # posortowane korelacje z calories
 calories_corr = pd.DataFrame(correlation_matrix.loc[:,"calories[kcal]"]
                              .abs().sort_values(ascending = False)).iloc[1:,:]
-print(calories_corr)
+print(calories_corr.head(9))
 # %%
 df.isna().sum() # max_speed ma około 80% braków, a do tego korelację tylko 0.41
 # pause_time ma bardzo niską korelację, wywalamy oba
@@ -120,6 +124,9 @@ df.loc[:,"lap_count"].describe() # ilość "serii"
 df.isna().sum() # NA tylko dla avg_cadence, max_cadence i movements po 231
 # %%
 # dla Random forest nie trzeba wypełniać NANów, ale porównałem i po wypełnieniu jest lepiej
+
+
+
 df.loc[:,"distance_bin"] = pd.qcut(df.loc[:,"distance[km]"], q=5)
 df.loc[:,"avg_cadence[rpm/spm]"] = df.groupby(["sport","sub_sport", "distance_bin"]
 )["avg_cadence[rpm/spm]"].transform(lambda x: x.fillna(x.median())).sort_index()
@@ -130,23 +137,20 @@ df.loc[:,"max_cadence[rpm/spm]"] = df.groupby(["sport","sub_sport", "distance_bi
 df.loc[:,"total_movements"] = df.groupby(["sport","sub_sport", "distance_bin"]
 )["total_movements"].transform(lambda x: x.fillna(x.median())).sort_index()
 df = df.drop(columns=["distance_bin"])
-# %%
-# usuwamy outlinery
+
 d1 = df.drop(["sport","sub_sport"], axis=1)
 Q1 = d1.quantile(0.25)
 Q3 = d1.quantile(0.75)
 IQR = Q3 - Q1
 clean = ((d1 >= (Q1 - 1.5 * IQR)) & (d1 <= (Q3 + 1.5 * IQR))).all(axis=1)
-df_clean = df.loc[clean,:].reset_index(drop=True)
-df_clean # 1418 wierszy, czyli tylko o 316 mniej
-df_clean.loc[:,"sport"].unique()
-df_clean.loc[:,"sub_sport"].unique()
-# wszystkie sporty dalej są
-df = df_clean
-# %%
-# one-hot-encoding
+df = df.loc[clean,:].reset_index(drop=True)
+df.loc[:,"sport"].unique()
+df.loc[:,"sub_sport"].unique()
+
 df = pd.get_dummies(df, columns=["sport","sub_sport"], drop_first=True)
-df
+
+
+
 # %% dzielimy na 2 zbiory
 X = df.drop(columns=["calories[kcal]"])
 Y = df["calories[kcal]"]
@@ -162,4 +166,6 @@ Y.to_csv("zebrane_dane_Y.csv", index=False)
 #koniec cz.1
 # %%
 df.loc[1234,:]
+# %%
+df
 # %%
