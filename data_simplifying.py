@@ -102,24 +102,6 @@ running_m = running.groupby(running['start_date'].dt.to_period('M')).agg({
 # Konwersja okresu na datę
 running_m['start_date'] = running_m['start_date'].dt.to_timestamp()
 
-# Wykres z dwiema osiami Y
-fig, ax1 = plt.subplots(figsize=(12, 6))
-
-# Kalorie
-ax1.set_xlabel('Data (miesiące)')
-ax1.set_ylabel('Kalorie [kcal]', color='tab:red')
-ax1.plot(running_m['start_date'], running_m['calories [kcal]'], color='tab:red', label='Kalorie')
-ax1.tick_params(axis='y', labelcolor='tab:red')
-
-# Dystans
-ax2 = ax1.twinx()
-ax2.set_ylabel('Dystans [km]', color='tab:blue')
-ax2.plot(running_m['start_date'], running_m['distance [km]'], color='tab:blue', label='Dystans')
-ax2.tick_params(axis='y', labelcolor='tab:blue')
-
-fig.tight_layout()
-plt.title('Kalorie i Dystans na Miesiąc')
-plt.show()
 # %%
 trail_running = running.loc[running.sub_sport == "trail"].drop("sub_sport", axis=1).reset_index(drop = True)
 generic_running = running.loc[running.sub_sport == "generic"].drop("sub_sport", axis=1).reset_index(drop = True)
@@ -137,7 +119,6 @@ df_dict = {
 }
 for name in framesy:
     df_dict[name] = df_dict[name].dropna(axis=1, how="all")
-    
     columns_to_drop = [
         col for col in df_dict[name].columns 
         if df_dict[name][col].nunique() == 1
@@ -153,148 +134,13 @@ generic_walking["start_date"] = pd.to_datetime(generic_walking["start_date"])
 generic_cycling["start_date"] = pd.to_datetime(generic_cycling["start_date"])
 generic_hiking["start_date"] = pd.to_datetime(generic_hiking["start_date"])
 
-monthly_kilometers_trail_running = (
-    trail_running.groupby(pd.Grouper(key="start_date", freq="M"))
-    ["distance [km]"].sum()
-    .reset_index()
-)
-monthly_kilometers_generic_running = (
-    generic_running.groupby(pd.Grouper(key="start_date", freq="M"))
-    ["distance [km]"].sum()
-    .reset_index()
-)
-monthly_kilometers_generic_walking = (
-    generic_walking.groupby(pd.Grouper(key="start_date", freq="M"))
-    ["distance [km]"].sum()
-    .reset_index()
-)
-monthly_kilometers_generic_cycling = (
-    generic_cycling.groupby(pd.Grouper(key="start_date", freq="M"))
-    ["distance [km]"].sum()
-    .reset_index()
-)
-monthly_kilometers_generic_hiking = (
-    generic_hiking.groupby(pd.Grouper(key="start_date", freq="M"))
-    ["distance [km]"].sum()
-    .reset_index()
-)
-all_sports = pd.concat([
-    trail_running[["start_date", "distance [km]"]],
-    generic_running[["start_date", "distance [km]"]],
-    generic_walking[["start_date", "distance [km]"]],
-    generic_cycling[["start_date", "distance [km]"]],
-    generic_hiking[["start_date", "distance [km]"]]
-], ignore_index=True)
-monthly_all = (
-    all_sports.groupby(pd.Grouper(key="start_date", freq="M"))
-    ["distance [km]"].sum()
-    .reset_index()
-)
-# Wykres z dwoma liniami
-plt.figure(figsize=(14, 8))
 
-plt.plot(
-    monthly_kilometers_trail_running["start_date"],
-    monthly_kilometers_trail_running["distance [km]"],
-    marker="o",
-    linestyle="-",
-    color="blue",
-    label="Trail Running"
-)
-plt.plot(
-    monthly_kilometers_generic_running["start_date"],
-    monthly_kilometers_generic_running["distance [km]"],
-    marker="s",
-    linestyle="-",
-    color="orange",
-    label="Generic running"
-)
 
-plt.plot(
-    monthly_kilometers_generic_walking["start_date"],
-    monthly_kilometers_generic_walking["distance [km]"],
-    marker="s",
-    linestyle="-",
-    color="red",
-    label="Generic walking"
-)
 
-plt.plot(
-    monthly_kilometers_generic_cycling["start_date"],
-    monthly_kilometers_generic_cycling["distance [km]"],
-    marker="s",
-    linestyle="-",
-    color="purple",
-    label="Generic cycling"
-)
-
-plt.plot(
-    monthly_kilometers_generic_hiking["start_date"],
-    monthly_kilometers_generic_hiking["distance [km]"],
-    marker="s",
-    linestyle="-",
-    color="brown",
-    label="Generic hiking"
-)
-plt.plot(
-    monthly_all["start_date"],
-    monthly_all["distance [km]"],
-    marker="o",
-    linestyle="-",
-    color="red",
-    label="monthly all"
-)
-plt.title("Porównanie kilometrów miesiecznie")
-plt.ylabel("Kilometry")
-plt.grid(True)
-plt.xticks(rotation=45)
-plt.legend()  # Pokazuj legende
-plt.tight_layout()
-plt.savefig("raport_miesieczny_sumy_kilometrow_z_podzialem", dpi=300)
-plt.show()
-all_sports.head()
 # %%
-
-all_sports["month"] = all_sports["start_date"].dt.month
-seasonal_trend = all_sports.groupby("month")["distance [km]"].sum()
-seasonal_trend.head(13)
-all_sports.head()
-# %%
-import matplotlib.pyplot as plt
-import calmap
-
-
-all_sports = all_sports.set_index("start_date")
-all_sports_series = all_sports["distance [km]"]
-
-fig, axes = calmap.calendarplot(
-    all_sports_series,
-    yearlabels=True,
-    yearlabel_kws={"fontsize": 14, "color": "black", "fontweight": "bold"},
-    cmap="YlOrBr",
-    fillcolor="whitesmoke",
-    linewidth=0.5,
-    dayticks=[0, 2, 4, 6],
-    monthticks=True,
-    monthly_border=True,
-    fig_kws={"figsize": (14, 10)},        # Większy wykres
-    fig_suptitle="Aktywność sportowa (wielolecie)",  # Suptytuł nad wykresem
-)
-
-# Polskie etykiety miesięcy
-polskie_miesiace = ['Sty', 'Lut', 'Mar', 'Kwi', 'Maj', 'Cze',
-                    'Lip', 'Sie', 'Wrz', 'Paź', 'Lis', 'Gru']
-
-# Przejdź przez wszystkie osie (każdy rok = osobna oś)
-for ax in fig.axes:
-    labels = ax.get_xticklabels()
-    if labels:
-        for label, new_text in zip(labels, polskie_miesiace):
-            label.set_text(new_text)
-            label.set_fontsize(9)
-            label.set_rotation(0)
-        ax.set_xticklabels(labels)
-
-plt.tight_layout()
-plt.show()
+generic_cycling.to_csv("cycling.csv", index=False)
+generic_running.to_csv("generic_running.csv", index=False)
+trail_running.to_csv("trail_running.csv", index=False)
+generic_walking.to_csv("walking.csv", index=False)
+generic_hiking.to_csv("hiking.csv", index=False)
 # %%
