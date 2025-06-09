@@ -3,9 +3,9 @@ import pandas as pd
 import glob
 import os
 
-folder_patch = "pdu-2025L-dane-csv/"
+folder_path = "C:\\Users\\szymo\\Desktop\\pdu-2025L-dane-csv"
 
-csv_files = glob.glob(os.path.join(folder_patch, "*.csv"))
+csv_files = glob.glob(os.path.join(folder_path, "*.csv"))
 
 data = []
 
