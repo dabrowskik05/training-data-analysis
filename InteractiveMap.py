@@ -175,23 +175,23 @@ def detect_fatigue_intervals(data, window):
     [Input("session-dropdown", "value")] # get the session id and updates the rest
 )
 def update_dashboard(session_id):
-    d = df_detailed[df_detailed.loc[:, 'session_id'] == session_id].copy() 
-    s = df_summary[df_summary.loc[:, 'session_id'] == session_id].iloc[0] 
-    duration = (d.loc[:, 'Full_Date'].max() - d.loc[:, 'Full_Date'].min()).total_seconds() / 60
+    det = df_detailed[df_detailed.loc[:, 'session_id'] == session_id].copy() 
+    summ = df_summary[df_summary.loc[:, 'session_id'] == session_id].iloc[0] 
+    duration = (det.loc[:, 'Full_Date'].max() - det.loc[:, 'Full_Date'].min()).total_seconds() / 60
 
     summary = html.Div([          # summary box
         html.H3("Summary", style={"color": "white"}),
-        html.P(f"Date: {s['Start_Date'].date()}"),
-        html.P(f"Total Distance: {s['Total_Distance']:.2f} km"),
+        html.P(f"Date: {summ['Start_Date'].date()}"),
+        html.P(f"Total Distance: {summ['Total_Distance']:.2f} km"),
         html.P(f"Duration: {duration:.1f} min"),
-        html.P(f"Calories Burned: {s['Calories']:.0f} kcal"),
-        html.P(f"Average Heart Rate: {s['Avg_Heart_Rate']:.0f} bpm"),
-        html.P(f"Average Speed: {s['Avg_Speed']:.2f} km/h"),
-        html.P(f"Activity Type: {d['Activity_Type'].iloc[0]}"),
-        html.P(f"Average Tempereature during the run: {s['Avg_Temperature']:.0f} C°")
+        html.P(f"Calories Burned: {summ['Calories']:.0f} kcal"),
+        html.P(f"Average Heart Rate: {summ['Avg_Heart_Rate']:.0f} bpm"),
+        html.P(f"Average Speed: {summ['Avg_Speed']:.2f} km/h"),
+        html.P(f"Activity Type: {summ['Activity_Type']}"),
+        html.P(f"Average Tempereature during the run: {summ['Avg_Temperature']:.0f} C°")
     ])
 
-    return make_map_figure(d), summary, plot_hr_speed(d)
+    return make_map_figure(det), summary, plot_hr_speed(det)
 
 # Run the app
 if __name__ == '__main__':

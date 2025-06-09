@@ -13,8 +13,8 @@ merged_df = pd.merge(df_json, df_csv, on='session_id', how='left')
 # Most important data
 summarised_df = merged_df.loc[:, merged_df.columns.tolist()[0:10] + 
     ['total_strokes', 'calories', 'total_ascent', 'total_descent', 
-     'training_effect', 'anaerobic_effect', 'total_strides' ]
-    + df_csv.columns.tolist()[2:len(df_csv.columns)] + ['session_id'] ]
+     'training_effect', 'anaerobic_effect', 'total_strides' , 'sport']
+    + df_csv.columns.tolist()[2:len(df_csv.columns)-1] + ['session_id'] ]
 
 # %%
 rename_dict = {
@@ -35,9 +35,11 @@ rename_dict = {
     "training_effect": "Training_Effect",
     "anaerobic_effect": "Anaerobic_Effect",
     "total_strides": "Total_Strides",
+    "sport": "Activity_Type"
 }
 
 summarised_df = summarised_df.rename(columns=rename_dict)
 
 # %%
-merged_df.to_csv('zmergowane_dane.csv', index=False)
+summarised_df.to_csv('zmergowane_dane.csv', index=False)
+# %%
