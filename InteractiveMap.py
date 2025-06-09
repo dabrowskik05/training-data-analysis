@@ -19,7 +19,7 @@ df_summary = DaneObrobione.summarised_df
 # App instance
 app = Dash(__name__)
 
-# --- Matplotlib chart with HR and Speed ---
+# Matplotlib chart with HR and Speed 
 def plot_hr_speed(data):
     fig, (ax1, ax2) = plt.subplots(nrows=2, ncols=1, figsize=(10, 7), sharex=True)
 
@@ -54,28 +54,27 @@ def plot_hr_speed(data):
     plt.close(fig)
     return "data:image/png;base64," + base64.b64encode(buf.getbuffer()).decode("utf8") 
 
-# --- Map plot ---
-def make_map_figure(d):
+# Map plot 
+def make_map_figure(data):
     fig = go.Figure()
 
     # Path trace
     fig.add_trace(go.Scattermapbox(
-        lat=d["Latitude"],
-        lon=d["Longitude"],
+        lat=data["Latitude"],
+        lon=data["Longitude"],
         mode="lines",
         name="Path",
         line=dict(color="blue", width=3)
     ))
 
     # Fatigue intervals
-    fatigue_intervals = detect_fatigue_intervals(d, window=4)
+    fatigue_intervals = detect_fatigue_intervals(data, window=4)
 
     add_legend = False
-
     for start, end in fatigue_intervals:
         fig.add_trace(go.Scattermapbox(
-            lat=d["Latitude"].iloc[start:end],
-            lon=d["Longitude"].iloc[start:end],
+            lat=data["Latitude"].iloc[start:end],
+            lon=data["Longitude"].iloc[start:end],
             mode="lines",
             name="Fatigue",
             line=dict(color="orange", width=4),
@@ -86,8 +85,8 @@ def make_map_figure(d):
 
     # Start marker
     fig.add_trace(go.Scattermapbox(
-        lat=[d.iloc[0]["Latitude"]],
-        lon=[d.iloc[0]["Longitude"]],
+        lat=[data.iloc[0]["Latitude"]],
+        lon=[data.iloc[0]["Longitude"]],
         mode="markers",
         name="Start",
         marker=dict(size=14, color="green", symbol="circle"),
@@ -97,8 +96,8 @@ def make_map_figure(d):
     
     # Stop marker
     fig.add_trace(go.Scattermapbox(
-        lat=[d.iloc[-1]["Latitude"]],
-        lon=[d.iloc[-1]["Longitude"]],
+        lat=[data.iloc[-1]["Latitude"]],
+        lon=[data.iloc[-1]["Longitude"]],
         mode="markers",
         marker=dict(size=14, color="red", symbol="circle"),
         name="End",
@@ -109,24 +108,24 @@ def make_map_figure(d):
 
     fig.update_layout(
         mapbox=dict(style="open-street-map",
-                    center={"lat": np.mean(d.loc[:, "Latitude"]), "lon": np.mean(d.loc[:, "Longitude"])}, # setting the center of the map
+                    center={"lat": np.mean(data.loc[:, "Latitude"]), "lon": np.mean(data.loc[:, "Longitude"])}, # setting the center of the map
                     zoom=12),
         height=600,
         margin={"r": 0, "t": 0, "l": 0, "b": 0} # margins right, top, left, bottom
     )
     return fig
 
-# --- Layout ---
+# Layout 
 app.layout = html.Div([  # new section
     html.H1("Map of Run and Stats", style={"color": "white"}),
     dcc.Dropdown(                   # dropdown to choose the number of session
     id="session-dropdown",
     options=[
         {
-            "label": f"{s_id} — {df_summary[df_summary['session_id'] == s_id]['Start_Date'].dt.date.values[0]}",
-            "value": s_id
+            "label": f"{session_id} — {df_summary[df_summary['session_id'] == session_id]['Start_Date'].dt.date.values[0]}",
+            "value": session_id
         }
-        for s_id in df_summary['session_id']
+        for session_id in df_summary['session_id']
     ],
     value=df_summary['session_id'].iloc[0],
     style={"width": "50%"}
@@ -146,13 +145,13 @@ def detect_fatigue_intervals(data, window):
     data['HR_Diff'] = data.loc[: ,'Heart_Rate'].diff()
     data['Speed_Diff'] = data.loc[: ,'Speed'].diff()
 
-    fatigue_flags = (data.loc[:, 'HR_Diff'] > 0) & (data.loc[:, 'Speed_Diff'] < 0)
+    fatigue_points = (data.loc[:, 'HR_Diff'] > 0) & (data.loc[:, 'Speed_Diff'] < 0)
 
     fatigue_ranges = []
     start = None
 
-    for i, flag in enumerate(fatigue_flags):
-        if flag:
+    for i, point in enumerate(fatigue_points):
+        if point:
             if start is None:
                 start = i
         else:
@@ -167,7 +166,7 @@ def detect_fatigue_intervals(data, window):
 
     return fatigue_ranges
 
-# --- Callback ---
+# Callback
 @app.callback(
     [Output("map", "figure"), # updates the map
      Output("summary-box", "children"), # updates the summary box
@@ -175,29 +174,27 @@ def detect_fatigue_intervals(data, window):
     [Input("session-dropdown", "value")] # get the session id and updates the rest
 )
 def update_dashboard(session_id):
-    det = df_detailed[df_detailed.loc[:, 'session_id'] == session_id].copy() 
-    summ = df_summary[df_summary.loc[:, 'session_id'] == session_id].iloc[0] 
-    duration = (det.loc[:, 'Full_Date'].max() - det.loc[:, 'Full_Date'].min()).total_seconds() / 60
+    session_data = df_detailed[df_detailed.loc[:, 'session_id'] == session_id].copy() 
+    session_summary = df_summary[df_summary.loc[:, 'session_id'] == session_id].iloc[0] 
+    duration = (session_data.loc[:, 'Full_Date'].max() - session_data.loc[:, 'Full_Date'].min()).total_seconds() / 60
 
     summary = html.Div([          # summary box
         html.H3("Summary", style={"color": "white"}),
-        html.P(f"Date: {summ['Start_Date'].date()}"),
-        html.P(f"Total Distance: {summ['Total_Distance']:.2f} km"),
+        html.P(f"Date: {session_summary['Start_Date'].date()}"),
+        html.P(f"Total Distance: {session_summary['Total_Distance']:.2f} km"),
         html.P(f"Duration: {duration:.1f} min"),
-        html.P(f"Calories Burned: {summ['Calories']:.0f} kcal"),
-        html.P(f"Average Heart Rate: {summ['Avg_Heart_Rate']:.0f} bpm"),
-        html.P(f"Average Speed: {summ['Avg_Speed']:.2f} km/h"),
-        html.P(f"Activity Type: {summ['Activity_Type']}"),
-        html.P(f"Average Tempereature during the run: {summ['Avg_Temperature']:.0f} C°")
+        html.P(f"Calories Burned: {session_summary['Calories']:.0f} kcal"),
+        html.P(f"Average Heart Rate: {session_summary['Avg_Heart_Rate']:.0f} bpm"),
+        html.P(f"Average Speed: {session_summary['Avg_Speed']:.2f} km/h"),
+        html.P(f"Activity Type: {session_summary['Activity_Type']}"),
+        html.P(f"Average Tempereature during the run: {session_summary['Avg_Temperature']:.0f} C°")
     ])
 
-    return make_map_figure(det), summary, plot_hr_speed(det)
+    return make_map_figure(session_data), summary, plot_hr_speed(session_data)
 
-# Run the app
 if __name__ == '__main__':
     app.run(debug=True)
 
-# Paste it in the web browser to lauch this app in browser
 # http://127.0.0.1:8050/
 
 # %%
