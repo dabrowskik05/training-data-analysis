@@ -19,28 +19,29 @@ df_summary = DaneObrobione.summarised_df
 # App instance
 app = Dash(__name__)
 
-# === Matplotlib chart with HR, Speed ===
+# --- Matplotlib chart with HR and Speed ---
 def plot_hr_speed(data):
     fig, (ax1, ax2) = plt.subplots(nrows=2, ncols=1, figsize=(10, 7), sharex=True)
 
     # Format x-axis like HH:MM
-    time_fmt = mdates.DateFormatter('%H:%M')
+    time_format = mdates.DateFormatter('%H:%M')
 
     # Heart Rate plot
-    ax1.plot(data['Full_Date'], data['Heart_Rate'], color='red')
+    ax1.plot(data.loc[:, 'Full_Date'], data.loc[:, 'Heart_Rate'], color='red')
     ax1.set_ylabel('Heart Rate (bpm)', color='red')
     ax1.tick_params(axis='y', labelcolor='red')
     ax1.grid(True)
-    ax1.xaxis.set_major_formatter(time_fmt)
+    ax1.xaxis.set_major_formatter(time_format)
 
     # Speed plot
-    ax2.plot(data['Full_Date'], data['Speed'], color='blue')
+    ax2.plot(data.loc[:, 'Full_Date'], data.loc[:, 'Speed'], color='blue')
     ax2.set_ylabel('Speed (km/h)', color='blue')
     ax2.tick_params(axis='y', labelcolor='blue')
     ax2.grid(True)
-    ax2.xaxis.set_major_formatter(time_fmt)
+    ax2.xaxis.set_major_formatter(time_format)
 
     ax2.xaxis.set_major_locator(mdates.AutoDateLocator()) # pretty date format
+
     plt.setp(ax2.xaxis.get_majorticklabels(), rotation=45, ha='right', color='white') # rotation of date ticks
 
 
@@ -53,7 +54,7 @@ def plot_hr_speed(data):
     plt.close(fig)
     return "data:image/png;base64," + base64.b64encode(buf.getbuffer()).decode("utf8") 
 
-# === Map plot ===
+# --- Map plot ---
 def make_map_figure(d):
     fig = go.Figure()
 
@@ -100,7 +101,7 @@ def make_map_figure(d):
         lon=[d.iloc[-1]["Longitude"]],
         mode="markers",
         marker=dict(size=14, color="red", symbol="circle"),
-        name="Start",
+        name="End",
         hoverinfo="text",
         text=["End"]
     ))
@@ -108,14 +109,14 @@ def make_map_figure(d):
 
     fig.update_layout(
         mapbox=dict(style="open-street-map",
-                    center={"lat": np.mean(d["Latitude"]), "lon": np.mean(d["Longitude"])}, # setting the center of the map
+                    center={"lat": np.mean(d.loc[:, "Latitude"]), "lon": np.mean(d.loc[:, "Longitude"])}, # setting the center of the map
                     zoom=12),
         height=600,
         margin={"r": 0, "t": 0, "l": 0, "b": 0} # margins right, top, left, bottom
     )
     return fig
 
-# === Layout === 
+# --- Layout ---
 app.layout = html.Div([  # new section
     html.H1("Map of Run and Stats", style={"color": "white"}),
     dcc.Dropdown(                   # dropdown to choose the number of session
@@ -139,13 +140,13 @@ app.layout = html.Div([  # new section
 
 
 # detects fatigue interval where heart rate increase and speed decrease in minimum 'window' next points and return the list of intervals
-def detect_fatigue_intervals(data, window=3):
+def detect_fatigue_intervals(data, window):
     
     data = data.copy()
-    data['HR_Diff'] = data['Heart_Rate'].diff()
-    data['Speed_Diff'] = data['Speed'].diff()
+    data['HR_Diff'] = data.loc[: ,'Heart_Rate'].diff()
+    data['Speed_Diff'] = data.loc[: ,'Speed'].diff()
 
-    fatigue_flags = (data['HR_Diff'] > 0) & (data['Speed_Diff'] < 0)
+    fatigue_flags = (data.loc[:, 'HR_Diff'] > 0) & (data.loc[:, 'Speed_Diff'] < 0)
 
     fatigue_ranges = []
     start = None
@@ -166,7 +167,7 @@ def detect_fatigue_intervals(data, window=3):
 
     return fatigue_ranges
 
-# === Callback ===
+# --- Callback ---
 @app.callback(
     [Output("map", "figure"), # updates the map
      Output("summary-box", "children"), # updates the summary box
@@ -174,9 +175,9 @@ def detect_fatigue_intervals(data, window=3):
     [Input("session-dropdown", "value")] # get the session id and updates the rest
 )
 def update_dashboard(session_id):
-    d = df_detailed[df_detailed['session_id'] == session_id].copy() 
-    s = df_summary[df_summary['session_id'] == session_id].iloc[0] 
-    duration = (d['Full_Date'].max() - d['Full_Date'].min()).total_seconds() / 60
+    d = df_detailed[df_detailed.loc[:, 'session_id'] == session_id].copy() 
+    s = df_summary[df_summary.loc[:, 'session_id'] == session_id].iloc[0] 
+    duration = (d.loc[:, 'Full_Date'].max() - d.loc[:, 'Full_Date'].min()).total_seconds() / 60
 
     summary = html.Div([          # summary box
         html.H3("Summary", style={"color": "white"}),
