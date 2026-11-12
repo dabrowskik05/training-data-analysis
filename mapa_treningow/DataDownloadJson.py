@@ -6,7 +6,7 @@ import os
 import numpy as np
 
 # %%
-folder_path = "C:\\Users\\szymo\\Desktop\\pdu-2025L-dane-json"
+folder_path = "pdu-2025L-dane-json"
 
 json_files = glob.glob(os.path.join(folder_path, "*.json"))
 
