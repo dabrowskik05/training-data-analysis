@@ -1,5 +1,7 @@
 # Analiza rzeczywistych danych treningowych
 
+> **In English:** Analysis of ~1,700 real workouts recorded by a sports watch, done as a university group project. It includes an interactive route dashboard (Dash), a study of what drives the watch's training effect score, and ML models (linear regression vs. random forest) predicting calories burned. The rest of this README is in Polish.
+
 Projekt z przedmiotu Przetwarzanie danych ustrukturyzowanych.
 
 Analizowane dane pochodzą z zegarka sportowego naszego profesora i obejmują około 1700 treningów: jazdę na rowerze, bieganie po asfalcie i w terenie, spacery oraz wędrówki. Każdy trening był zapisany w dwóch postaciach: jako podsumowanie w pliku JSON (czas, dystans, kalorie, tętno, efekt treningowy) i jako szczegółowy przebieg w pliku CSV z pomiarami rejestrowanymi w trakcie aktywności (pozycja GPS, tętno, prędkość, wysokość, kadencja). Pracę podzieliliśmy na trzy problemy, z których każdy opracowała jedna osoba.
